@@ -6,7 +6,7 @@ services:
     env_file:
       - ./.env
     ports:
-      - 8443:1193
+      - 443:1194
     # volumes:
     #   - ./config:/etc/openvpn
     #   - ./config/letsencrypt:/etc/letsencrypt

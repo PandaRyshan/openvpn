@@ -9,16 +9,16 @@ COPY docker-entrypoint.sh /entrypoint.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 
 RUN set -x \
-  && apt-get update && apt-get install -y wget build-essential \
+  && apt-get update && apt-get install -y wget easy-rsa build-essential \
   && apt-get install --no-install-recommends -y \
     openssl ca-certificates tar pkg-config libnl-genl-3-dev \
     libcap-ng-dev libssl-dev liblz4-dev liblzo2-dev libpam0g-dev \
     libpkcs11-helper1-dev libgcrypt20-dev \
     certbot python3-certbot-dns-cloudflare cron iptables \
   && wget -qO- "${URL}" -O openvpn.tar.xz \
-  && tar xf openvpn.tar.xz && cd openvpn-2.6.5 \
+  && tar -xf *.tar.xz && cd openvpn-* \
   && ./configure \
-  && make && make install && make clean \
+  && autoconf -i -v -f && make && make install && make clean \
   && cd .. && rm -rf openvpn-* \
   && apt-get -y remove --auto-remove --purge wget build-essential \
   && rm -rf /var/lib/apt/lists/* \
@@ -28,5 +28,5 @@ WORKDIR /etc/openvpn
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-EXPOSE 443
+EXPOSE 1194
 CMD ["openvpn", "/etc/openvpn/openvpn.conf"]
