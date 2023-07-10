@@ -9,7 +9,7 @@ COPY docker-entrypoint.sh /entrypoint.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 
 RUN set -x \
-  && apt-get update && apt-get install -y wget easy-rsa build-essential \
+  && apt-get update && apt-get install -y wget easy-rsa autoconf build-essential \
   && apt-get install --no-install-recommends -y \
     openssl ca-certificates tar pkg-config libnl-genl-3-dev \
     libcap-ng-dev libssl-dev liblz4-dev liblzo2-dev libpam0g-dev \
@@ -17,8 +17,8 @@ RUN set -x \
     certbot python3-certbot-dns-cloudflare cron iptables \
   && wget -qO- "${URL}" -O openvpn.tar.xz \
   && tar -xf *.tar.xz && cd openvpn-* \
-  && ./configure \
-  && autoconf -i -v -f && make && make install && make clean \
+  && autoconf -i -v -f && ./configure \
+  && make && make install && make clean \
   && cd .. && rm -rf openvpn-* \
   && apt-get -y remove --auto-remove --purge wget build-essential \
   && rm -rf /var/lib/apt/lists/* \
