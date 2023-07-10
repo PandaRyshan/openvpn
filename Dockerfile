@@ -8,23 +8,23 @@ ENV DEPENDENCIES="libnl-genl-3-dev libcap-ng-dev libssl-dev liblz4-dev \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-COPY docker-entrypoint.sh /entrypoint.sh
-COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
-
 RUN set -x \
   && apt update && apt install -y build-essential wget easy-rsa pkg-config openssl \
-  && apt install --no-install-recommends -y "${DEPENDENCIES}"\
+  && apt install --no-install-recommends -y ${DEPENDENCIES} \
   && cd /root && wget -qO- "${URL}" -O openvpn.tar.xz \
   && tar -xf openvpn*.tar.xz && cd openvpn-2.6.5 \
   && ./configure && make && make install && make clean \
   && cd /root && rm -rf openvpn-* \
-  && apt -y remove --autoremove --purge build-essential wget ${DEPENDENCIES}\
+  && apt -y remove --autoremove --purge build-essential wget ${DEPENDENCIES} \
   && rm -rf /var/lib/apt/lists/* \
   && ln -s /usr/share/easy-rsa /root \
   && cd /root/easy-rsa && cp vars.example vars \
   && chmod +x /entrypoint.sh
 
 WORKDIR /root/easy-rsa
+
+COPY docker-entrypoint.sh /entrypoint.sh
+COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 
 ENTRYPOINT ["/entrypoint.sh"]
 
