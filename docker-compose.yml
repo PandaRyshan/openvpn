@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  ocserv:
+    image: duckduckio/openvpn:latest
+    container_name: openvpn
+    env_file:
+      - ./.env
+    ports:
+      - 8443:1193
+    # volumes:
+    #   - ./config:/etc/openvpn
+    #   - ./config/letsencrypt:/etc/letsencrypt
+    sysctls:
+      - net.ipv4.ip_forward=1
+    cap_add:
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges
+    restart: unless-stopped
