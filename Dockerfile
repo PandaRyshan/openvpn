@@ -18,13 +18,12 @@ RUN set -x \
   && apt -y remove --autoremove --purge build-essential wget ${DEPENDENCIES} \
   && rm -rf /var/lib/apt/lists/* \
   && ln -s /usr/share/easy-rsa /root \
-  && cd /root/easy-rsa && cp vars.example vars \
-  && chmod +x /entrypoint.sh
+  && cd /root/easy-rsa && cp vars.example vars
 
 WORKDIR /root/easy-rsa
 
-COPY docker-entrypoint.sh /entrypoint.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
+COPY ./docker-entrypoint.sh /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
