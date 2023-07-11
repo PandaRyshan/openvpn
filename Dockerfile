@@ -9,15 +9,16 @@ ENV DEPENDENCIES="libnl-genl-3-dev libcap-ng-dev libssl-dev liblz4-dev \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN set -x \
-  && apt update && apt install -y build-essential wget easy-rsa pkg-config openssl \
-  && apt install --no-install-recommends -y ${DEPENDENCIES} \
-  && cd /root && wget -qO- "${URL}" -O openvpn.tar.xz \
-  && tar -xf openvpn*.tar.xz && cd openvpn-2.6.5 \
+  && apt update \
+  && apt install -y build-essential iptables wget easy-rsa pkg-config \
+    openssl ${DEPENDENCIES} \
+  && cd /root && wget -qO- "${URL}" -O openvpn-${VERSION}.tar.gz \
+  && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
   && ./configure && make && make install && make clean \
   && cd /root && rm -rf openvpn-* && mkdir -p /etc/openvpn/server/ \
   && mkdir easy-rsa && ln -s /usr/share/easy-rsa/* /root/easy-rsa \
   && cd /root/easy-rsa \
-  && apt -y remove --autoremove --purge build-essential wget ${DEPENDENCIES} \
+  && apt -y remove build-essential wget ${DEPENDENCIES} \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/easy-rsa
@@ -29,4 +30,4 @@ COPY ./docker-entrypoint.sh /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 1194
-CMD ["openvpn", "/etc/openvpn/openvpn.conf"]
+CMD ["openvpn", "/etc/openvpn/server/server.conf"]

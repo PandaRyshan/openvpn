@@ -1,10 +1,11 @@
 version: '3.8'
 services:
-  ocserv:
+  openvpn:
+    build: .
     image: duckduckio/openvpn:latest
     container_name: openvpn
-    env_file:
-      - ./.env
+    # env_file:
+    #   - ./.env
     ports:
       - 443:1194
     volumes:

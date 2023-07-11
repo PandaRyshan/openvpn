@@ -13,12 +13,6 @@ if [ ! -d "/root/easy-rsa/pki" ]; then
 	./easyrsa init-pki
 fi
 
-# Create vars
-if [ ! -f "/root/easy-rsa/vars" ]; then
-	echo "default vars not found, copy from default"
-	cp vars.example vars
-fi
-
 # Build CA
 if [ ! -f "/root/easy-rsa/pki/ca.crt" ]; then
 	echo "default ca.crt not found, creating..."
@@ -36,7 +30,7 @@ fi
 # Build Server crt
 if [ ! -f "/root/easy-rsa/pki/issued/server.crt" ]; then
 	echo "default server.crt not found, creating..."
-    echo -e "$DEFAULT_CA_PASSPHRASE\r" | ./easyrsa --days=3650 build-server-full server nopass
+    ./easyrsa --days=3650 build-server-full server nopass
 	if [ ! -f "/etc/openvpn/server/server.crt" ]; then
 		cp pki/issued/server.crt /etc/openvpn/server/
 		cp pki/private/server.key /etc/openvpn/server/
@@ -44,17 +38,17 @@ if [ ! -f "/root/easy-rsa/pki/issued/server.crt" ]; then
 fi
 
 # Build Client crt
-if [ ! -f "/root/easy-rsa/pki/issued/client.crt" ]; then
-	echo "default client.crt not found, creating..."
-	echo -e "$DEFAULT_CA_PASSPHRASE\r" | ./easyrsa --days=3650 build-client-full client nopass
-fi
+# if [ ! -f "/root/easy-rsa/pki/issued/client.crt" ]; then
+# 	echo "default client.crt not found, creating..."
+# 	./easyrsa --days=3650 build-client-full client nopass
+# fi
 
 # Build tls auth/crypt key
 if [ ! -f "/root/easy-rsa/pki/ta.key" ]; then
 	echo "default ta.key not found, creating..."
 	openvpn --genkey secret /root/easy-rsa/pki/ta.key
 	if [ ! -f "/etc/openvpn/server/ta.key" ]; then
-		cp pki/ta.key /etc/openvpn/server/
+		cp /root/easy-rsa/pki/ta.key /etc/openvpn/server/
 	fi
 fi
 
@@ -63,7 +57,7 @@ if [ ! -f "/root/easy-rsa/pki/dh.pem" ]; then
 	echo "default dh.pem not found, createing..."
 	./easyrsa gen-dh
 	if [ ! -f "/etc/openvpn/server/dh.pem" ]; then
-		cp pki/dh.pem /etc/openvpn/server/
+		cp /root/easy-rsa/pki/dh.pem /etc/openvpn/server/
 	fi
 fi
 
@@ -72,7 +66,7 @@ if [ ! -f "/root/easy-rsa/pki/crl.pem" ]; then
 	echo "default crl.pem not found, creating..."
 	./easyrsa gen-crl
 	if [ ! -f "/etc/openvpn/server/crl.pem" ]; then
-		cp pki/crl.pem /etc/openvpn/server/
+		cp /root/easy-rsa/pki/crl.pem /etc/openvpn/server/
 	fi
 fi
 
@@ -93,6 +87,7 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	dh /etc/openvpn/server/dh.pem
 	auth SHA256
 	tls-crypt /etc/openvpn/server/ta.key
+	tls-version-min 1.3
 	crl-verify /etc/openvpn/server/crl.pem
 	topology subnet
 	server 10.8.0.0 255.255.255.0
@@ -112,6 +107,7 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 fi
 
 # Build client base config
+HOSTIP=$(curl -s https://ipinfo.io/ip)
 mkdir -p /root/client-configs
 if [ ! -f "/root/client-configs/base.conf" ]; then
 	echo "base.conf not found, creating..."
@@ -120,7 +116,7 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	client
 	dev tun
 	proto tcp
-	remote $(curl ipinfo.io/ip) 1194
+	remote ${HOSTIP} 1194
 	resolv-retry infinite
 	nobind
 	user nobody
@@ -129,7 +125,7 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	persist-tun
 	remote-cert-tls server
 	cipher AES-256-GCM
-	tls-crypt ta.key
+	tls-version-min 1.3
 	auth SHA256
 	key-direction 1
 	verb 3
@@ -145,6 +141,11 @@ sysctl -w net.ipv4.ip_forward=1
 # iptables -t nat -A POSTROUTING -s 192.168.100.0/24 -j SNAT --to-source $(hostname -I)
 iptables -t nat -A POSTROUTING -s 10.8.0.0/8 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
+# Enable TUN device
+mkdir -p /dev/net
+mknod /dev/net/tun c 10 200
+chmod 600 /dev/net/tun
 
 # Run OpenVPN Server
 exec "$@"

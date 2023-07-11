@@ -1,7 +1,7 @@
 #!/bin/bash
 
 base_conf=$(cat /root/client-configs/base.conf)
-client_name="client-$(uuidgen | cut -d'-' -f1)"
+client_name="client-$(openssl rand -hex 4)"
 
 cd /root/easy-rsa
 ./easyrsa --days=3650 build-client-full ${client_name} nopass
@@ -11,7 +11,7 @@ client_key=$(cat /root/easy-rsa/pki/private/${client_name}.key)
 ca_cert=$(cat /root/easy-rsa/pki/ca.crt)
 ta_key=$(cat /root/easy-rsa/pki/ta.key)
 
-cat > /root/client-configs/client_name.ovpn <<- EOF
+cat > /root/client-configs/${client_name}.ovpn <<- EOF
 ${base_conf}
 
 <cert>
