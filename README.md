@@ -8,7 +8,7 @@ TODO
 
 ## TODO
 
-* [ ] build docker image
+* [x] build docker image
 * [ ] cert & config file generator
 * [ ] add radius plugin support
 * [ ] add certbot

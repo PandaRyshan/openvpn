@@ -7,8 +7,9 @@ services:
       - ./.env
     ports:
       - 443:1194
-    # volumes:
-    #   - ./config:/etc/openvpn
+    volumes:
+      - ./config:/etc/openvpn
+      - ./config/certs:/etc/openvpn/certs
     #   - ./config/letsencrypt:/etc/letsencrypt
     sysctls:
       - net.ipv4.ip_forward=1

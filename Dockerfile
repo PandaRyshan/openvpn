@@ -14,14 +14,15 @@ RUN set -x \
   && cd /root && wget -qO- "${URL}" -O openvpn.tar.xz \
   && tar -xf openvpn*.tar.xz && cd openvpn-2.6.5 \
   && ./configure && make && make install && make clean \
-  && cd /root && rm -rf openvpn-* \
+  && cd /root && rm -rf openvpn-* && mkdir -p /etc/openvpn/server/ \
+  && mkdir easy-rsa && ln -s /usr/share/easy-rsa/* /root/easy-rsa \
+  && cd /root/easy-rsa \
   && apt -y remove --autoremove --purge build-essential wget ${DEPENDENCIES} \
-  && rm -rf /var/lib/apt/lists/* \
-  && ln -s /usr/share/easy-rsa /root \
-  && cd /root/easy-rsa && cp vars.example vars
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/easy-rsa
 
+COPY ./build-client.sh /root/easy-rsa/build-client.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 COPY ./docker-entrypoint.sh /entrypoint.sh
 
