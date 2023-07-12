@@ -102,12 +102,18 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	persist-key
 	persist-tun
 	verb 3
-	explicit-exit-notify
+	# explicit-exit-notify only used in UDP mode
+	# explicit-exit-notify
 	EOF
 fi
 
 # Build client base config
 HOSTIP=$(curl -s https://ipinfo.io/ip)
+
+if [ -z "$PORT" ]; then
+	PORT=443
+fi
+
 mkdir -p /root/client-configs
 if [ ! -f "/root/client-configs/base.conf" ]; then
 	echo "base.conf not found, creating..."
@@ -116,7 +122,7 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	client
 	dev tun
 	proto tcp
-	remote ${HOSTIP} 1194
+	remote ${HOSTIP} ${PORT}
 	resolv-retry infinite
 	nobind
 	user nobody
@@ -129,7 +135,6 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	auth SHA256
 	key-direction 1
 	verb 3
-	explicit-exit-notify
 	EOF
 	/root/easy-rsa/build-client.sh	
 fi
