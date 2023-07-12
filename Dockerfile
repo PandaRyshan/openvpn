@@ -10,8 +10,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN set -x \
   && apt update \
-  && apt install -y build-essential iptables wget easy-rsa pkg-config \
-    openssl ${DEPENDENCIES} \
+  && apt install -y build-essential iptables curl wget easy-rsa \
+    pkg-config openssl ${DEPENDENCIES} \
   && cd /root && wget -qO- "${URL}" -O openvpn-${VERSION}.tar.gz \
   && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
   && ./configure && make && make install && make clean \
