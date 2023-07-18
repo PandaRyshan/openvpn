@@ -15,4 +15,3 @@ TODO
 * [x] build docker image
 * [x] cert & config file generator
 * [ ] add radius plugin support
-* [ ] add certbot
