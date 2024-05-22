@@ -23,10 +23,10 @@ RUN set -x \
 
 WORKDIR /root/easy-rsa
 
-COPY ./build-client.sh /root/easy-rsa/build-client.sh
+COPY ./build-client.sh /build-client.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 COPY ./docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh /wait /root/easy-rsa/build-client.sh
+RUN chmod +x /entrypoint.sh /wait /build-client.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 

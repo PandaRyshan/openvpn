@@ -1,7 +1,7 @@
 #!/bin/bash
 
-base_conf=$(cat /root/client-configs/base.conf)
 client_name="$1"
+base_conf=$(cat /root/client-configs/base.conf)
 ca_key=$(cat /root/easy-rsa/pki/DEFAULT_CA_PASSPHRASE)
 
 if [ -z "$client_name" ]; then

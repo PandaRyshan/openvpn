@@ -1,19 +1,26 @@
 services:
   openvpn:
-    build: .
-    # image: pandasrun/openvpn:latest
+    image: pandasrun/openvpn:latest
     container_name: openvpn
-    # env_file:
-    #   - ./.env
+    networks:
+      - ipv6
     ports:
       - 443:1194
+      - 443:1194/udp
     volumes:
       - ./configs:/root/client-configs
-    #   - ./config/letsencrypt:/etc/letsencrypt
     sysctls:
       - net.ipv4.ip_forward=1
+      - net.ipv6.conf.all.forwarding=1
     cap_add:
       - NET_ADMIN
     security_opt:
       - no-new-privileges
     restart: unless-stopped
+
+networks:
+  ipv6:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: 2001:0DB8::/112

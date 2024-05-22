@@ -59,12 +59,6 @@ EOF
 	fi
 fi
 
-# Build Client crt
-# if [ ! -f "/root/easy-rsa/pki/issued/client.crt" ]; then
-# 	echo "default client.crt not found, creating..."
-# 	./easyrsa --days=3650 build-client-full client nopass
-# fi
-
 # Build tls auth/crypt key
 if [ ! -f "/root/easy-rsa/pki/ta.key" ]; then
 	echo "default ta.key not found, creating..."
@@ -97,7 +91,17 @@ EOF
 	fi
 fi
 
+PROTO=${PROTO:-"tcp"}
+if [ "$PROTO" == "tcp" ]; then
+	PROTO_SERVER="tcp-server"
+	PROTO_CLIENT="tcp-client"
+else
+	PROTO_SERVER="udp"
+	PROTO_CLIENT="udp"
+fi
+
 # Build server config
+# if you want a tcp server, set: proto tcp-server
 if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	echo "server.conf not found, creating..."
 	touch /etc/openvpn/server/server.conf
@@ -106,7 +110,7 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	key-direction 0
 	duplicate-cn
 	port 1194
-	proto tcp
+	proto ${PROTO_SERVER}
 	dev tun
 	ca /etc/openvpn/server/ca.crt
 	cert /etc/openvpn/server/server.crt
@@ -117,7 +121,8 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	tls-version-min 1.3
 	crl-verify /etc/openvpn/server/crl.pem
 	topology subnet
-	server 10.8.0.0 255.255.255.0
+	server 172.20.0.0 255.255.255.0
+	server-ipv6 2001:db8:2::/64
 	push "redirect-gateway def1 bypass-dhcp"
 	ifconfig-pool-persist ipp.txt
 	push "dhcp-option DNS 1.1.1.1"
@@ -135,7 +140,13 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 fi
 
 # Build client base config
-HOSTIP=$(curl -s https://ipinfo.io/ip)
+if [ -n "$DOMAIN" ]; then
+	DOMAIN_OR_IP=$DOMAIN
+else
+	IPV4=$(timeout 3 curl -s https://ipinfo.io/ip)
+	IPV6=$(timeout 3 curl -s https://6.ipinfo.io/ip)
+	DOMAIN_OR_IP=${IPV4:-$IPV6}
+fi
 
 if [ -z "$PORT" ]; then
 	PORT=443
@@ -148,8 +159,8 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	cat > /root/client-configs/base.conf <<- EOF
 	client
 	dev tun
-	proto tcp
-	remote ${HOSTIP} ${PORT}
+	proto ${PROTO_CLIENT}
+	remote ${DOMAIN_OR_IP} ${PORT}
 	resolv-retry infinite
 	nobind
 	user nobody
@@ -163,14 +174,14 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	key-direction 1
 	verb 3
 	EOF
-	/root/easy-rsa/build-client.sh	
+	/build-client.sh	
 fi
 
 # Enable NAT forwarding
-# if you want to specific translate ip, uncomment the following line, -j MASQUERADE is dynamic way
-# iptables -t nat -A POSTROUTING -s 192.168.100.0/24 -j SNAT --to-source $(hostname -I)
-iptables -t nat -A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 172.20.0.0/24 -o eth0 -j MASQUERADE
+ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 # Enable TUN device
 mkdir -p /dev/net
