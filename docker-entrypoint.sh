@@ -7,10 +7,15 @@
 # WORKDIR /root/easy-rsa
 ################################
 
+if [ ! -f vars ]; then
+	echo "vars not found, copying..."
+	cp /root/easy-rsa/vars.example /root/easy-rsa/vars
+fi
+
 # Init PKI
 if [ ! -d "/root/easy-rsa/pki" ]; then
 	echo "default pki not found, init pki"
-	./easyrsa init-pki
+	echo yes | ./easyrsa init-pki
 fi
 
 # Build CA
@@ -19,9 +24,19 @@ if [ ! -f "/root/easy-rsa/pki/ca.crt" ]; then
 	if [ -z "$DEFAULT_CA_PASSPHRASE" ]; then
 		echo "DEFAULT_PASSPHRASE not found, creating..."
 		DEFAULT_CA_PASSPHRASE=$(openssl rand -base64 14)
+		echo -e "$DEFAULT_CA_PASSPHRASE" > /root/easy-rsa/pki/DEFAULT_CA_PASSPHRASE
 	fi
-	echo -e "$DEFAULT_CA_PASSPHRASE\n$DEFAULT_CA_PASSPHRASE\n\n" | ./easyrsa build-ca nopass
-	echo "DEFAULT_PASSPHRASE=$DEFAULT_CA_PASSPHRASE" > /root/easy-rsa/pki/DEFAULT_PASSPHRASE
+	/usr/bin/expect << EOF
+spawn ./easyrsa build-ca
+expect "Enter New CA Key Passphrase"
+send "$DEFAULT_CA_PASSPHRASE\r"
+expect "Confirm New CA Key Passphrase"
+send "$DEFAULT_CA_PASSPHRASE\r"
+expect "Common Name (eg: your user, host, or server name)"
+send "\r"
+expect eof
+EOF
+	# echo -e "$DEFAULT_CA_PASSPHRASE\n$DEFAULT_CA_PASSPHRASE\n" | ./easyrsa build-ca
 	if [ ! -f "/etc/openvpn/server/ca.crt" ]; then
 		cp pki/ca.crt /etc/openvpn/server/
 	fi
@@ -30,7 +45,14 @@ fi
 # Build Server crt
 if [ ! -f "/root/easy-rsa/pki/issued/server.crt" ]; then
 	echo "default server.crt not found, creating..."
-    ./easyrsa --days=3650 build-server-full server nopass
+	/usr/bin/expect << EOF
+spawn ./easyrsa --days=3650 build-server-full server nopass
+expect "Confirm request details"
+send "yes\r"
+expect "Enter pass phrase for"
+send "$DEFAULT_CA_PASSPHRASE\r"
+expect eof
+EOF
 	if [ ! -f "/etc/openvpn/server/server.crt" ]; then
 		cp pki/issued/server.crt /etc/openvpn/server/
 		cp pki/private/server.key /etc/openvpn/server/
@@ -64,7 +86,12 @@ fi
 # Build CRL
 if [ ! -f "/root/easy-rsa/pki/crl.pem" ]; then
 	echo "default crl.pem not found, creating..."
-	./easyrsa gen-crl
+	/usr/bin/expect << EOF
+spawn ./easyrsa gen-crl
+expect "Enter pass phrase for"
+send "$DEFAULT_CA_PASSPHRASE\r"
+expect eof
+EOF
 	if [ ! -f "/etc/openvpn/server/crl.pem" ]; then
 		cp /root/easy-rsa/pki/crl.pem /etc/openvpn/server/
 	fi
@@ -73,7 +100,7 @@ fi
 # Build server config
 if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	echo "server.conf not found, creating..."
-    touch /etc/openvpn/server/server.conf
+	touch /etc/openvpn/server/server.conf
 	cat > /etc/openvpn/server/server.conf <<- EOF
 	verify-client-cert
 	key-direction 0

@@ -1,35 +1,34 @@
 #!/bin/bash
 
 base_conf=$(cat /root/client-configs/base.conf)
-client_name="client-$(openssl rand -hex 4)"
+client_name="$1"
+ca_key=$(cat /root/easy-rsa/pki/DEFAULT_CA_PASSPHRASE)
+
+if [ -z "$client_name" ]; then
+	client_name="client-$(openssl rand -hex 4)"
+else
+	client_name="client-$client_name"
+fi
 
 cd /root/easy-rsa
-./easyrsa --days=3650 build-client-full ${client_name} nopass
+/usr/bin/expect << EOF
+spawn ./easyrsa --days=3650 build-client-full ${client_name} nopass
+expect "Confirm request details"
+send "yes\r"
+expect "Enter pass phrase for"
+send "$ca_key\r"
+expect eof
+EOF
 
-client_cert=$(cat /root/easy-rsa/pki/issued/${client_name}.crt)
-client_key=$(cat /root/easy-rsa/pki/private/${client_name}.key)
-ca_cert=$(cat /root/easy-rsa/pki/ca.crt)
+client_inline=$(cat /root/easy-rsa/pki/inline/${client_name}.inline)
 ta_key=$(cat /root/easy-rsa/pki/ta.key)
 
 cat > /root/client-configs/${client_name}.ovpn <<- EOF
 ${base_conf}
 
-<cert>
-${client_cert}
-</cert>
-
-<key>
-${client_key}
-</key>
-
-<ca>
-${ca_cert}
-</ca>
+${client_inline}
 
 <tls-crypt>
 ${ta_key}
 </tls-crypt>
 EOF
-
-./easyrsa gen-crl
-cp -f /root/easy-rsa/pki/crl.pem /etc/openvpn/server/

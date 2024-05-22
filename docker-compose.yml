@@ -1,8 +1,7 @@
-version: '3.8'
 services:
   openvpn:
     build: .
-    # image: duckduckio/openvpn:latest
+    # image: pandasrun/openvpn:latest
     container_name: openvpn
     # env_file:
     #   - ./.env
