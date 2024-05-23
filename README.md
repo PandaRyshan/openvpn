@@ -63,6 +63,12 @@ Then restart your docker service:
 sudo systemctl restart docker.service
 ```
 
+## Reference
+
+* [Manual for OpenVPN 2.6](https://openvpn.net/community-resources/reference-manual-for-openvpn-2-6/)
+* [OpenVPN How-To](https://community.openvpn.net/openvpn/wiki/GettingStartedwithOVPN)
+* [Easy-RSA for OpenVPN How-To](https://community.openvpn.net/openvpn/wiki/EasyRSA3-OpenVPN-Howto)
+
 ## TODO
 
 * [x] build docker image
