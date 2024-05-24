@@ -123,8 +123,9 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	topology subnet
 	server 172.20.0.0 255.255.255.0
 	server-ipv6 2001:db8:2::/64
+	# ifconfig-pool <start-ip> <end-ip>
+	# ifconfig-ipv6-pool <start-ip> <end-ip>
 	push "redirect-gateway def1 bypass-dhcp"
-	ifconfig-pool-persist ipp.txt
 	push "dhcp-option DNS 1.1.1.1"
 	push "dhcp-option DNS 8.8.8.8"
 	keepalive 10 120

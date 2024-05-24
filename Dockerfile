@@ -11,7 +11,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -x \
   && apt update \
   && apt install -y build-essential iptables curl wget easy-rsa \
-    pkg-config openssl expect socat ${DEPENDENCIES} \
+    pkg-config openssl expect socat liblzo2-2 libnl-genl-3-200 \
+    ${DEPENDENCIES} \
   && cd /root && wget -qO- "${URL}" -O openvpn-${VERSION}.tar.gz \
   && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
   && ./configure && make && make install && make clean \
