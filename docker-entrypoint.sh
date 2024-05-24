@@ -189,4 +189,10 @@ mknod /dev/net/tun c 10 200
 chmod 600 /dev/net/tun
 
 # Run OpenVPN Server
-exec "$@"
+
+if [ "$PROTO" == "tcp" ]; then
+	openvpn /etc/openvpn/server/server.conf &
+	socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
+else
+	openvpn /etc/openvpn/server/server.conf
+fi

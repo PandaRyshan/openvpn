@@ -11,7 +11,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN set -x \
   && apt update \
   && apt install -y build-essential iptables curl wget easy-rsa \
-    pkg-config openssl expect ${DEPENDENCIES} \
+    pkg-config openssl expect socat ${DEPENDENCIES} \
   && cd /root && wget -qO- "${URL}" -O openvpn-${VERSION}.tar.gz \
   && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
   && ./configure && make && make install && make clean \
@@ -19,6 +19,7 @@ RUN set -x \
   && mkdir easy-rsa && ln -s /usr/share/easy-rsa/* /root/easy-rsa \
   && cd /root/easy-rsa \
   && apt -y remove build-essential wget ${DEPENDENCIES} \
+  && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root/easy-rsa
@@ -31,4 +32,3 @@ RUN chmod +x /entrypoint.sh /wait /build-client.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 1194
-CMD ["openvpn", "/etc/openvpn/server/server.conf"]
