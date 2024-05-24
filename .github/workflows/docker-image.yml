@@ -59,7 +59,7 @@ jobs:
       -
         name: Test
         run: |
-          docker run --rm ${{ env.TEST_TAG }}
+          docker run --rm --cap-add NET_ADMIN ${{ env.TEST_TAG }}
       -
         name: Build and push
         uses: docker/build-push-action@v5
