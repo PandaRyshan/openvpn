@@ -191,9 +191,8 @@ chmod 600 /dev/net/tun
 
 # Run OpenVPN Server
 if [ "$PROTO" == "tcp" ]; then
-	openvpn /etc/openvpn/server/server.conf &
-	openvpn_pid=$!
-	if wait $openvpn_pid; then
+	openvpn --daemon --config /etc/openvpn/server/server.conf
+	if pgrep -x "openvpn" > /dev/null; then
 		socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
 	else
 		echo "OpenVPN Server failed to start"
