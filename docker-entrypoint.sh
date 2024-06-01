@@ -179,25 +179,25 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 fi
 
 # Enable NAT forwarding
+echo "Forwarding IP..."
 iptables -t nat -A POSTROUTING -s 172.20.0.0/24 -o eth0 -j MASQUERADE
 ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
 # Enable TUN device
+echo "Create TUN device..."
 mkdir -p /dev/net
 mknod /dev/net/tun c 10 200
 chmod 600 /dev/net/tun
 
 # Run OpenVPN Server
-if [ "$PROTO" == "tcp" ]; then
-	openvpn --daemon --config /etc/openvpn/server/server.conf
-	if pgrep -x "openvpn" > /dev/null; then
-		socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
-	else
-		echo "OpenVPN Server failed to start"
-		exit 1
-	fi
+echo "Start OpenVPN..."
+openvpn --daemon --config /etc/openvpn/server/server.conf
+echo "OpenVPN Server is running..."
+if pgrep -x "openvpn" > /dev/null; then
+	socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
 else
-	openvpn /etc/openvpn/server/server.conf
+	echo "!! OpenVPN Server failed to start !!"
+	exit 1
 fi
