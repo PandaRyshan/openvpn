@@ -126,12 +126,12 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	# ifconfig-pool <start-ip> <end-ip>
 	# ifconfig-ipv6-pool <start-ip> <end-ip>
 	push "redirect-gateway def1 bypass-dhcp"
+	push "route-ipv6 2000::/3"
 	push "dhcp-option DNS 1.1.1.1"
 	push "dhcp-option DNS 8.8.8.8"
 	keepalive 10 120
 	cipher AES-256-GCM
 	user nobody
-	group nogroup
 	persist-key
 	persist-tun
 	verb 3
@@ -165,7 +165,6 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	resolv-retry infinite
 	nobind
 	user nobody
-	group nogroup
 	persist-key
 	persist-tun
 	remote-cert-tls server
