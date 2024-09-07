@@ -1,7 +1,7 @@
-FROM ubuntu:rolling
+FROM ubuntu:latest
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
-ENV VERSION="2.6.10"
+ENV VERSION="2.6.12"
 ENV URL="https://swupdate.openvpn.org/community/releases/openvpn-${VERSION}.tar.gz"
 ENV DEPENDENCIES="libnl-genl-3-dev libcap-ng-dev libssl-dev liblz4-dev \ 
   liblzo2-dev libpam0g-dev libpkcs11-helper1-dev libgcrypt20-dev"
