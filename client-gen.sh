@@ -5,9 +5,9 @@ base_conf=$(cat /root/client-configs/base.conf)
 ca_key=$(cat /root/easy-rsa/pki/DEFAULT_CA_PASSPHRASE)
 
 if [ -z "$client_name" ]; then
-	client_name="client-$(openssl rand -hex 4)"
+	client_name="$(openssl rand -hex 4)"
 else
-	client_name="client-$client_name"
+	client_name="$client_name"
 fi
 
 cd /root/easy-rsa

@@ -4,6 +4,8 @@ services:
     container_name: openvpn
     networks:
       - ipv6
+    devices:
+      - /dev/net/tun
     ports:
       - 443:1194
       - 443:1194/udp
