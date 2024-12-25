@@ -17,7 +17,6 @@ RUN set -x \
   && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
   && ./configure && make && make install && make clean \
   && cd /root && rm -rf openvpn-* \
-  && mkdir -p /etc/openvpn/server /etc/openvpn/clients /etc/openvpn/certs \
   && apt -y remove build-essential wget ${DEPENDENCIES} \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*

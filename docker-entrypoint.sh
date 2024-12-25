@@ -6,6 +6,7 @@
 ################################
 # WORKDIR /etc/openvpn
 ################################
+mkdir -p /etc/openvpn/certs /etc/openvpn/server /etc/openvpn/clients
 cd /etc/openvpn/certs
 
 if [ ! -f vars ]; then
