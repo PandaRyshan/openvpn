@@ -16,14 +16,13 @@ RUN set -x \
   && cd /root && wget -qO- "${URL}" -O openvpn-${VERSION}.tar.gz \
   && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
   && ./configure && make && make install && make clean \
-  && cd /root && rm -rf openvpn-* && mkdir -p /etc/openvpn/server/ \
-  && mkdir easy-rsa && ln -s /usr/share/easy-rsa/* /root/easy-rsa \
-  && cd /root/easy-rsa \
+  && cd /root && rm -rf openvpn-* \
+  && mkdir -p /etc/openvpn/server /etc/openvpn/clients /etc/openvpn/certs \
   && apt -y remove build-essential wget ${DEPENDENCIES} \
   && apt autoremove -y \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /root/easy-rsa
+WORKDIR /etc/openvpn
 
 COPY ./client-gen.sh /client-gen.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait

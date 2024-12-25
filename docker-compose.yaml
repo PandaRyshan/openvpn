@@ -10,9 +10,7 @@ services:
       - 443:1194
       - 443:1194/udp
     volumes:
-      - ./config/server:/etc/openvpn/server
-      - ./config/client:/root/client-configs
-      - ./config/certs:/usr/share/easy-rsa
+      - ./config:/etc/openvpn
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv6.conf.all.forwarding=1
