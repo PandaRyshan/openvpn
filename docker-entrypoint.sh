@@ -17,7 +17,7 @@ fi
 # Init PKI
 if [ ! -d "/etc/openvpn/certs/pki" ]; then
 	echo "default pki not found, init pki"
-	echo yes | ./easyrsa init-pki
+	echo yes | /usr/share/easy-rsa/easyrsa init-pki
 fi
 
 # Build CA
@@ -38,7 +38,7 @@ expect "Common Name (eg: your user, host, or server name)"
 send "\r"
 expect eof
 EOF
-	# echo -e "$DEFAULT_CA_PASSPHRASE\n$DEFAULT_CA_PASSPHRASE\n" | ./easyrsa build-ca
+	# echo -e "$DEFAULT_CA_PASSPHRASE\n$DEFAULT_CA_PASSPHRASE\n" | /usr/share/easy-rsa/easyrsa build-ca
 	if [ ! -f "/etc/openvpn/server/ca.crt" ]; then
 		cp /etc/openvpn/certs/pki/ca.crt /etc/openvpn/server/
 	fi
