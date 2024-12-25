@@ -127,7 +127,7 @@ if [ ! -f "/etc/openvpn/server/server.conf" ]; then
 	# ifconfig-ipv6-pool <start-ip> <end-ip>
 	push "redirect-gateway def1 bypass-dhcp"
 	push "route-ipv6 2000::/3"
-	push "dhcp-option DNS 1.1.1.1"
+	push "dhcp-option DNS 208.67.222.222"
 	push "dhcp-option DNS 8.8.8.8"
 	keepalive 10 120
 	cipher AES-256-GCM
@@ -174,7 +174,7 @@ if [ ! -f "/root/client-configs/base.conf" ]; then
 	key-direction 1
 	verb 3
 	EOF
-	/build-client.sh	
+	clientgen
 fi
 
 # Enable NAT forwarding
