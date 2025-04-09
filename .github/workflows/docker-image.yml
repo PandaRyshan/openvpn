@@ -50,6 +50,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
+        name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PACKAGE_TOKEN }}
+      -
         name: Build and export to Docker
         uses: docker/build-push-action@v5
         with:
@@ -63,4 +70,6 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ${{ steps.meta.outputs.tags }}
+            ${{ steps.meta.outputs.tags }} |
+            ghcr.io/${{ steps.meta.outputs.tags }}
+
