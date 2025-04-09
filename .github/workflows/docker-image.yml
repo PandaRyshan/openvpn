@@ -33,7 +33,7 @@ jobs:
         with:
           images: |
             docker.io/pandasrun/openvpn
-            ghcr.io/${{ vars.REPO_OWNER_LOWER }}/openvpn
+            ghcr.io/pandaryshan/openvpn
           tags: |
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
             type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
