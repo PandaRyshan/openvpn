@@ -123,7 +123,7 @@ tls-crypt /etc/openvpn/server/ta.key
 tls-version-min 1.3
 crl-verify /etc/openvpn/server/crl.pem
 topology subnet
-server 172.20.0.0 255.255.255.0
+server 192.168.202.0 255.255.255.0
 server-ipv6 2001:db8:2::/64
 # ifconfig-pool <start-ip> <end-ip>
 # ifconfig-ipv6-pool <start-ip> <end-ip>
@@ -180,7 +180,7 @@ fi
 
 # Enable NAT forwarding
 echo "Forwarding IP..."
-iptables -t nat -A POSTROUTING -s 172.20.0.0/24 -o eth0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 192.168.202.0.0/24 -o eth0 -j MASQUERADE
 ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
