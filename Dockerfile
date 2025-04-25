@@ -1,7 +1,7 @@
 FROM ubuntu:latest
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
-ENV VERSION="2.6.12"
+ENV VERSION="2.6.14"
 ENV URL="https://swupdate.openvpn.org/community/releases/openvpn-${VERSION}.tar.gz"
 ENV DEPENDENCIES="libnl-genl-3-dev libcap-ng-dev libssl-dev liblz4-dev \ 
   liblzo2-dev libpam0g-dev libpkcs11-helper1-dev libgcrypt20-dev"
@@ -24,10 +24,12 @@ RUN set -x \
 WORKDIR /etc/openvpn
 
 COPY ./client-gen.sh /client-gen.sh
+COPY ./client-revoke.sh /client-revoke.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
 COPY ./docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh /wait /client-gen.sh \
-  && ln -s /client-gen.sh /usr/local/bin/clientgen
+RUN chmod +x /entrypoint.sh /wait /client-gen.sh /client-revoke.sh \
+  && ln -s /client-gen.sh /usr/local/bin/clientgen \
+  && ln -s /client-revoke.sh /usr/local/bin/clientrevoke
 
 ENTRYPOINT ["/entrypoint.sh"]
 
