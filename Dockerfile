@@ -31,6 +31,6 @@ RUN chmod +x /entrypoint.sh /wait /client-gen.sh /client-revoke.sh \
   && ln -s /client-gen.sh /usr/local/bin/clientgen \
   && ln -s /client-revoke.sh /usr/local/bin/clientrevoke
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["bash", "/entrypoint.sh"]
 
 EXPOSE 1194
