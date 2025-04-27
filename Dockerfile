@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM ubuntu:latest
+FROM ubuntu:latest
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
 ENV VERSION="2.6.14"
