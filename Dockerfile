@@ -27,6 +27,3 @@ RUN chmod +x /entrypoint.sh /wait /client-gen.sh /client-revoke.sh \
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 1194
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD ss -tln | grep -q ':1194'
