@@ -209,6 +209,7 @@ if pgrep -x "openvpn" > /dev/null; then
 		socat TCP6-LISTEN:443,reuseaddr,fork TCP6:127.0.0.1:1194
 	else
 		socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
+	fi
 else
 	echo "!! OpenVPN Server failed to start !!"
 	exit 1
