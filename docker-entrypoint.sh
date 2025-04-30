@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Wait for other container
 # /wait
@@ -93,13 +93,12 @@ EOF
 	fi
 fi
 
-PROTO=${PROTO:-"tcp"}
-if [ "$PROTO" == "tcp" ]; then
-	PROTO_SERVER="tcp-server"
-	PROTO_CLIENT="tcp-client"
-else
+if [ "$PROTO" == "udp" ]; then
 	PROTO_SERVER="udp"
 	PROTO_CLIENT="udp"
+else
+	PROTO_SERVER="tcp-server"
+	PROTO_CLIENT="tcp-client"
 fi
 
 # Build server config
@@ -206,7 +205,10 @@ echo "Start OpenVPN..."
 openvpn --daemon --config /etc/openvpn/server/server.conf
 echo "OpenVPN Server is running..."
 if pgrep -x "openvpn" > /dev/null; then
-	socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
+	if ip -6 addr | grep -q "scope global"; then
+		socat TCP6-LISTEN:443,reuseaddr,fork TCP6:127.0.0.1:1194
+	else
+		socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
 else
 	echo "!! OpenVPN Server failed to start !!"
 	exit 1
