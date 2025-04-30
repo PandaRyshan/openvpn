@@ -11,7 +11,7 @@ ARG TARGETARCH
 RUN set -x \
   apk update \
   && apk add --no-cache \
-    iptables curl expect socat easy-rsa openvpn \
+    iptables curl expect iproute2 socat easy-rsa openvpn \
   && rm -rf /var/cache/apk/*
 
 WORKDIR /etc/openvpn
@@ -27,3 +27,6 @@ RUN chmod +x /entrypoint.sh /wait /client-gen.sh /client-revoke.sh \
 ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 1194
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD ss -tln | grep -q ':1194'
