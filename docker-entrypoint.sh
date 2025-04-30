@@ -206,7 +206,7 @@ openvpn --daemon --config /etc/openvpn/server/server.conf
 echo "OpenVPN Server is running..."
 if pgrep -x "openvpn" > /dev/null; then
 	if ip -6 addr | grep -q "scope global"; then
-		socat TCP6-LISTEN:443,reuseaddr,fork TCP6:127.0.0.1:1194
+		socat TCP6-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
 	else
 		socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
 	fi
