@@ -1,27 +1,17 @@
-FROM ubuntu:minimal
+FROM alpine:latest
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
 ENV VERSION="2.6.14"
-ENV URL="https://swupdate.openvpn.org/community/releases/openvpn-${VERSION}.tar.gz"
-ENV DEPENDENCIES="libnl-genl-3-dev libcap-ng-dev libssl-dev liblz4-dev \ 
-  liblzo2-dev libpam0g-dev libpkcs11-helper1-dev libgcrypt20-dev"
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 
 ARG TARGETARCH
 
 RUN set -x \
-  && apt update \
-  && apt install -y build-essential iptables curl wget easy-rsa \
-    pkg-config openssl expect socat liblzo2-2 libnl-genl-3-200 \
-    ${DEPENDENCIES} \
-  && cd /root && wget -qO- "${URL}" -O openvpn-${VERSION}.tar.gz \
-  && tar -xf openvpn-${VERSION}.tar.gz && cd openvpn-${VERSION} \
-  && ./configure && make && make install && make clean \
-  && cd /root && rm -rf openvpn-* \
-  && apt -y remove build-essential wget ${DEPENDENCIES} \
-  && apt autoremove -y \
-  && rm -rf /var/lib/apt/lists/*
+  apk update \
+  && apk add --no-cache \
+    iptables curl expect easy-rsa openvpn \
+  && rm -rf /var/cache/apk/*
 
 WORKDIR /etc/openvpn
 
@@ -33,6 +23,6 @@ RUN chmod +x /entrypoint.sh /wait /client-gen.sh /client-revoke.sh \
   && ln -s /client-gen.sh /usr/local/bin/clientgen \
   && ln -s /client-revoke.sh /usr/local/bin/clientrevoke
 
-ENTRYPOINT ["bash", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 1194

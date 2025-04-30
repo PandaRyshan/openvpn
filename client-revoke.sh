@@ -18,4 +18,16 @@ send "$ca_key\r"
 expect eof
 EOF
 
+echo "Generating updated CRL..."
+/usr/bin/expect << EOF
+spawn /usr/share/easy-rsa/easyrsa gen-crl
+expect "Enter pass phrase for"
+send "$ca_key\r"
+expect eof
+EOF
+cp /etc/openvpn/certs/pki/crl.pem /etc/openvpn/server/
+
+echo "Revoked client ${client_name} and updated CRL."
+
 rm /etc/openvpn/clients/${client_name}.ovpn
+echo "Removed ${client_name} config file."

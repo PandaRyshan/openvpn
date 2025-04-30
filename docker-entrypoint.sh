@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Wait for other container
 # /wait
@@ -129,8 +129,8 @@ server-ipv6 2001:db8:2::/64
 # ifconfig-ipv6-pool <start-ip> <end-ip>
 push "redirect-gateway def1 bypass-dhcp"
 push "route-ipv6 2000::/3"
-push "dhcp-option DNS 208.67.222.222"
 push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 208.67.222.222"
 keepalive 10 120
 cipher AES-256-GCM
 user nobody
@@ -195,11 +195,4 @@ fi
 
 # Run OpenVPN Server
 echo "Start OpenVPN..."
-openvpn --daemon --config /etc/openvpn/server/server.conf
-echo "OpenVPN Server is running..."
-if pgrep -x "openvpn" > /dev/null; then
-	socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
-else
-	echo "!! OpenVPN Server failed to start !!"
-	exit 1
-fi
+openvpn --config /etc/openvpn/server/server.conf
