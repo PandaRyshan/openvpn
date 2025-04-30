@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:minimal
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
 ENV VERSION="2.6.14"
@@ -7,6 +7,8 @@ ENV DEPENDENCIES="libnl-genl-3-dev libcap-ng-dev libssl-dev liblz4-dev \
   liblzo2-dev libpam0g-dev libpkcs11-helper1-dev libgcrypt20-dev"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ARG TARGETARCH
 
 RUN set -x \
   && apt update \
