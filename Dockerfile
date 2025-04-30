@@ -2,6 +2,7 @@ FROM alpine:latest
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
 ENV VERSION="2.6.14"
+ENV FORWARD_PROXY_IP=""
 
 SHELL ["/bin/sh", "-o", "pipefail", "-c"]
 

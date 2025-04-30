@@ -2,6 +2,9 @@ services:
   openvpn:
     image: pandasrun/openvpn:latest
     container_name: openvpn
+    environment:
+      - DOMAIN=
+      - FORWARD_PROXY_IP=
     networks:
       - ipv6
     devices:

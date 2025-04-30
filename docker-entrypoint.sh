@@ -185,12 +185,20 @@ ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
+if [ -n "$FORWARD_PROXY_IP" ]; then
+	echo "Detected FORWARD_PROXY_IP=$FORWARD_PROXY_IP, applying iptables DNAT rule..."
+	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+		-j DNAT --to-destination "$FORWARD_PROXY_IP"
+else
+	echo "No FORWARD_PROXY_IP set. Skipping DNAT rules."
+fi
+
 # Enable TUN device
 if [ ! -c /dev/net/tun ]; then
 	echo "Create TUN device..."
-    mkdir -p /dev/net
-    mknod /dev/net/tun c 10 200
-    chmod 600 /dev/net/tun
+	mkdir -p /dev/net
+	mknod /dev/net/tun c 10 200
+	chmod 600 /dev/net/tun
 fi
 
 # Run OpenVPN Server
