@@ -11,7 +11,7 @@ ARG TARGETARCH
 RUN set -x \
   apk update \
   && apk add --no-cache \
-    iptables curl expect easy-rsa openvpn \
+    iptables curl expect socat easy-rsa openvpn \
   && rm -rf /var/cache/apk/*
 
 WORKDIR /etc/openvpn

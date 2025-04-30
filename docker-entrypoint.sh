@@ -203,4 +203,11 @@ fi
 
 # Run OpenVPN Server
 echo "Start OpenVPN..."
-openvpn --config /etc/openvpn/server/server.conf
+openvpn --daemon --config /etc/openvpn/server/server.conf
+echo "OpenVPN Server is running..."
+if pgrep -x "openvpn" > /dev/null; then
+	socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
+else
+	echo "!! OpenVPN Server failed to start !!"
+	exit 1
+fi
