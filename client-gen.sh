@@ -20,7 +20,7 @@ send "$ca_key\r"
 expect eof
 EOF
 
-client_inline=$(cat /etc/openvpn/certs/pki/inline/${client_name}.inline)
+client_inline=$(cat /etc/openvpn/certs/pki/inline/private/${client_name}.inline)
 ta_key=$(cat /etc/openvpn/certs/pki/ta.key)
 
 cat > /etc/openvpn/clients/${client_name}.ovpn <<- EOF
