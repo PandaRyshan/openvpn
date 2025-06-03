@@ -184,12 +184,19 @@ ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
-if [ -n "$FORWARD_PROXY_IP" ]; then
-	echo "Detected FORWARD_PROXY_IP=$FORWARD_PROXY_IP, applying iptables DNAT rule..."
+if [ -n "$FORWARD_PROXY_IPV4" ]; then
+	echo "Detected FORWARD_PROXY_IPV4=$FORWARD_PROXY_IPV4, applying iptables DNAT rule..."
 	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
-		-j DNAT --to-destination "$FORWARD_PROXY_IP"
+		-j DNAT --to-destination "$FORWARD_PROXY_IPV4"
 else
-	echo "No FORWARD_PROXY_IP set. Skipping DNAT rules."
+	echo "No FORWARD_PROXY_IPV4 set. Skipping DNAT rules."
+fi
+if [ -n "$FORWARD_PROXY_IPV6" ]; then
+	echo "Detected FORWARD_PROXY_IPV6=$FORWARD_PROXY_IPV6, applying iptables DNAT rule..."
+	ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+		-j DNAT --to-destination "$FORWARD_PROXY_IPV6"
+else
+	echo "No FORWARD_PROXY_IPV6 set. Skipping DNAT rules."
 fi
 
 # Enable TUN device

@@ -13,7 +13,7 @@ fi
 cd /etc/openvpn/certs
 /usr/bin/expect << EOF
 spawn /usr/share/easy-rsa/easyrsa --days=3650 build-client-full ${client_name} nopass
-expect "Confirm request details"
+expect "Confirm requested details:"
 send "yes\r"
 expect "Enter pass phrase for"
 send "$ca_key\r"
