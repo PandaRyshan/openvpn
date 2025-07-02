@@ -127,12 +127,12 @@ server-ipv6 2001:db8:2::/64
 # ifconfig-pool <start-ip> <end-ip>
 # ifconfig-ipv6-pool <start-ip> <end-ip>
 push "redirect-gateway def1 bypass-dhcp"
+push "redirect-gateway ipv6"
 push "route-ipv6 2000::/3"
 push "dhcp-option DNS 8.8.8.8"
 push "dhcp-option DNS 208.67.222.222"
 keepalive 10 120
 cipher AES-256-GCM
-user nobody
 persist-key
 persist-tun
 verb 3
@@ -164,7 +164,6 @@ proto ${PROTO_CLIENT}
 remote ${DOMAIN_OR_IP} ${PORT}
 resolv-retry infinite
 nobind
-user nobody
 persist-key
 persist-tun
 remote-cert-tls server
@@ -184,6 +183,7 @@ ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
+## TODO: 加入对域名的支持，可以通过域名直接得到 ipv4 和 ipvk
 if [ -n "$FORWARD_PROXY_IPV4" ]; then
 	echo "Detected FORWARD_PROXY_IPV4=$FORWARD_PROXY_IPV4, applying iptables DNAT rule..."
 	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
@@ -198,6 +198,26 @@ if [ -n "$FORWARD_PROXY_IPV6" ]; then
 else
 	echo "No FORWARD_PROXY_IPV6 set. Skipping DNAT rules."
 fi
+
+## TODO: 需要改进对 gost 的支持
+if timeout 1 getent hosts gost > /dev/null 2>&1; then
+	echo "Detected gost service, setting up proxy forwarding..."
+	PROXY_IPV4=$(getent ahostsv4 gost | head -n 1 | awk '{print $1}')
+	PROXY_IPV6=$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')
+
+	if [ -n "$PROXY_IPV4" ]; then
+		iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+			-j DNAT --to-destination "$PROXY_IPV4:40000"
+		echo "IPv4 Forwarded to gost"
+	fi
+	if [ -n "$PROXY_IPV6" ]; then
+		ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+			-j DNAT --to-destination "[$PROXY_IPV6]:40000"
+		echo "IPv6 Forwarded to gost"
+	fi
+else
+	echo "No gost service detected. Skipping proxy forwarding."
+fk
 
 # Enable TUN device
 if [ ! -c /dev/net/tun ]; then
