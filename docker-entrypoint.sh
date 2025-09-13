@@ -130,7 +130,7 @@ push "redirect-gateway def1 bypass-dhcp"
 push "redirect-gateway ipv6"
 push "route-ipv6 2000::/3"
 push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 208.67.222.222"
+push "dhcp-option DNS 1.1.1.1"
 keepalive 10 120
 cipher AES-256-GCM
 persist-key
