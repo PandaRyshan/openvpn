@@ -217,7 +217,7 @@ if timeout 1 getent hosts gost > /dev/null 2>&1; then
 	fi
 else
 	echo "No gost service detected. Skipping proxy forwarding."
-fk
+fi
 
 # Enable TUN device
 if [ ! -c /dev/net/tun ]; then
