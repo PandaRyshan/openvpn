@@ -4,7 +4,10 @@ services:
     container_name: openvpn
     environment:
       - DOMAIN=
-      - FORWARD_PROXY_IP=
+      #- FORWARD_GOST=true  # optional; forward all TCP to gost, default false if unset
+      #- FORWARD_IPV4=      # optional; forward all traffic to a public IPv4 when FORWARD_GOST=false
+      #- FORWARD_IPV6=      # optional; forward all traffic to a public IPv6 when FORWARD_GOST=false
+      - EXPOSE_PORT=443     # expose port, should be same as your public port in ports section
     networks:
       - ipv6
     devices:

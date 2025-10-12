@@ -2,7 +2,6 @@ FROM alpine:latest
 LABEL maintainer="Hu Xiaohong <xiaohong@pandas.run>"
 
 ENV VERSION="2.6.14"
-ENV FORWARD_PROXY_IP=""
 ARG TARGETARCH
 
 RUN apk add --no-cache bash
@@ -19,7 +18,7 @@ WORKDIR /etc/openvpn
 COPY ./client-gen.sh /client-gen.sh
 COPY ./client-revoke.sh /client-revoke.sh
 COPY --from=ghcr.io/ufoscout/docker-compose-wait:latest /wait /wait
-COPY ./docker-entrypoint.sh /entrypoint.sh
+COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh /wait /client-gen.sh /client-revoke.sh \
   && ln -s /client-gen.sh /usr/local/bin/clientgen \
   && ln -s /client-revoke.sh /usr/local/bin/clientrevoke

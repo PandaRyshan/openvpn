@@ -150,8 +150,8 @@ else
 	DOMAIN_OR_IP=${IPV4:-$IPV6}
 fi
 
-if [ -z "$PORT" ]; then
-	PORT=443
+if [ -z "$EXPOSE_PORT" ]; then
+	EXPOSE_PORT=443
 fi
 
 if [ ! -f "/etc/openvpn/clients/base.conf" ]; then
@@ -161,7 +161,7 @@ if [ ! -f "/etc/openvpn/clients/base.conf" ]; then
 client
 dev tun
 proto ${PROTO_CLIENT}
-remote ${DOMAIN_OR_IP} ${PORT}
+remote ${DOMAIN_OR_IP} ${EXPOSE_PORT}
 resolv-retry infinite
 nobind
 persist-key
@@ -183,40 +183,49 @@ ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
-## TODO: 加入对域名的支持，可以通过域名直接得到 ipv4 和 ipvk
-if [ -n "$FORWARD_PROXY_IPV4" ]; then
-	echo "Detected FORWARD_PROXY_IPV4=$FORWARD_PROXY_IPV4, applying iptables DNAT rule..."
-	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
-		-j DNAT --to-destination "$FORWARD_PROXY_IPV4"
-else
-	echo "No FORWARD_PROXY_IPV4 set. Skipping DNAT rules."
-fi
-if [ -n "$FORWARD_PROXY_IPV6" ]; then
-	echo "Detected FORWARD_PROXY_IPV6=$FORWARD_PROXY_IPV6, applying iptables DNAT rule..."
-	ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
-		-j DNAT --to-destination "$FORWARD_PROXY_IPV6"
-else
-	echo "No FORWARD_PROXY_IPV6 set. Skipping DNAT rules."
-fi
+## 转发策略：FORWARD_GOST 默认为 false，且与 FORWARD_IPV4/6 互斥
+ENABLE_GOST="${FORWARD_GOST:-false}"
+if [ "$ENABLE_GOST" = "true" ]; then
+    echo "FORWARD_GOST=true, 将忽略 FORWARD_IPV4/6，尝试转发到 gost 服务"
+    if timeout 1 getent hosts gost > /dev/null 2>&1; then
+        PROXY_IPV4=$(getent ahostsv4 gost | head -n 1 | awk '{print $1}')
+        PROXY_IPV6=$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')
 
-## TODO: 需要改进对 gost 的支持
-if timeout 1 getent hosts gost > /dev/null 2>&1; then
-	echo "Detected gost service, setting up proxy forwarding..."
-	PROXY_IPV4=$(getent ahostsv4 gost | head -n 1 | awk '{print $1}')
-	PROXY_IPV6=$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')
-
-	if [ -n "$PROXY_IPV4" ]; then
-		iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
-			-j DNAT --to-destination "$PROXY_IPV4:40000"
-		echo "IPv4 Forwarded to gost"
-	fi
-	if [ -n "$PROXY_IPV6" ]; then
-		ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
-			-j DNAT --to-destination "[$PROXY_IPV6]:40000"
-		echo "IPv6 Forwarded to gost"
-	fi
+        if [ -n "$PROXY_IPV4" ]; then
+            # 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
+            iptables -t nat -A PREROUTING -i tun0 -p tcp \
+                -j DNAT --to-destination "$PROXY_IPV4:40000"
+            iptables -t nat -A PREROUTING -i tun0 -p udp \
+                -j DNAT --to-destination "$PROXY_IPV4:40000"
+            echo "IPv4 TCP/UDP Forwarded to gost: $PROXY_IPV4:40000"
+        fi
+        if [ -n "$PROXY_IPV6" ]; then
+            ip6tables -t nat -A PREROUTING -i tun0 -p tcp \
+                -j DNAT --to-destination "[$PROXY_IPV6]:40000"
+            ip6tables -t nat -A PREROUTING -i tun0 -p udp \
+                -j DNAT --to-destination "[$PROXY_IPV6]:40000"
+            echo "IPv6 TCP/UDP Forwarded to gost: [$PROXY_IPV6]:40000"
+        fi
+    else
+        echo "FORWARD_GOST=true 但未检测到 gost 服务，跳过代理转发"
+    fi
 else
-	echo "No gost service detected. Skipping proxy forwarding."
+    echo "FORWARD_GOST=false，启用到目标公网 IP 的转发（全端口）"
+    if [ -n "$FORWARD_IPV4" ]; then
+        echo "Detected FORWARD_IPV4=$FORWARD_IPV4, applying IPv4 DNAT for TCP/UDP..."
+        # 所有 TCP/UDP 端口转发到目标 IPv4（保留原始端口）
+        iptables -t nat -A PREROUTING -i tun0 -p tcp -j DNAT --to-destination "$FORWARD_IPV4"
+        iptables -t nat -A PREROUTING -i tun0 -p udp -j DNAT --to-destination "$FORWARD_IPV4"
+    else
+        echo "No FORWARD_IPV4 set. Skipping IPv4 DNAT rules."
+    fi
+    if [ -n "$FORWARD_IPV6" ]; then
+        echo "Detected FORWARD_IPV6=$FORWARD_IPV6, applying IPv6 DNAT for TCP/UDP..."
+        ip6tables -t nat -A PREROUTING -i tun0 -p tcp -j DNAT --to-destination "$FORWARD_IPV6"
+        ip6tables -t nat -A PREROUTING -i tun0 -p udp -j DNAT --to-destination "$FORWARD_IPV6"
+    else
+        echo "No FORWARD_IPV6 set. Skipping IPv6 DNAT rules."
+    fi
 fi
 
 # Enable TUN device
@@ -228,16 +237,5 @@ if [ ! -c /dev/net/tun ]; then
 fi
 
 # Run OpenVPN Server
-echo "Start OpenVPN..."
-openvpn --daemon --config /etc/openvpn/server/server.conf
-echo "OpenVPN Server is running..."
-if pgrep -x "openvpn" > /dev/null; then
-	if ip -6 addr | grep -q "scope global"; then
-		socat TCP6-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
-	else
-		socat TCP-LISTEN:443,reuseaddr,fork TCP:127.0.0.1:1194
-	fi
-else
-	echo "!! OpenVPN Server failed to start !!"
-	exit 1
-fi
+echo "Start OpenVPN (foreground)..."
+openvpn --config /etc/openvpn/server/server.conf
