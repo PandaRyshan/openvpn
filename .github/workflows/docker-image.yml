@@ -8,7 +8,7 @@ on:
       - '**'
     paths:
       - 'Dockerfile'
-      - 'docker-entrypoint.sh'
+      - 'entrypoint.sh'
       - 'build-client.sh'
   pull_request:
     branches:
