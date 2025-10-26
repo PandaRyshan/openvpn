@@ -188,55 +188,30 @@ ENABLE_GOST="${FORWARD_GOST:-false}"
 if [ "$ENABLE_GOST" = "true" ]; then
     echo "FORWARD_GOST=true, 将忽略 FORWARD_IPV4/6，尝试转发到 gost 服务"
     if timeout 1 getent hosts gost > /dev/null 2>&1; then
-        PROXY_IPV4=$(getent ahostsv4 gost | head -n 1 | awk '{print $1}')
-        PROXY_IPV6=$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')
-
-        if [ -n "$PROXY_IPV4" ]; then
-			# 避免回环流量
-            iptables -t nat -I PREROUTING 1 -i tun0 -p tcp -d 127.0.0.0/8 -j RETURN
-            iptables -t nat -I PREROUTING 1 -i tun0 -p udp -d 127.0.0.0/8 -j RETURN
-            # 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
-            iptables -t nat -A PREROUTING -i tun0 -p tcp \
-                -j DNAT --to-destination "$PROXY_IPV4:40000"
-            iptables -t nat -A PREROUTING -i tun0 -p udp \
-                -j DNAT --to-destination "$PROXY_IPV4:40000"
-            echo "IPv4 TCP/UDP Forwarded to gost: $PROXY_IPV4:40000"
-        fi
-        if [ -n "$PROXY_IPV6" ]; then
-			# 避免回环流量
-            ip6tables -t nat -I PREROUTING 1 -i tun0 -p tcp -d ::1/128 -j RETURN
-            ip6tables -t nat -I PREROUTING 1 -i tun0 -p udp -d ::1/128 -j RETURN
-            # 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
-            ip6tables -t nat -A PREROUTING -i tun0 -p tcp \
-                -j DNAT --to-destination "[$PROXY_IPV6]:40000"
-            ip6tables -t nat -A PREROUTING -i tun0 -p udp \
-                -j DNAT --to-destination "[$PROXY_IPV6]:40000"
-            echo "IPv6 TCP/UDP Forwarded to gost: [$PROXY_IPV6]:40000"
-        fi
+        FORWARD_IPV4="$(getent ahostsv4 gost | head -n 1 | awk '{print $1}'):40000"
+        FORWARD_IPV6="$(getent ahostsv6 gost | head -n 1 | awk '{print $1}'):40000"
     else
         echo "FORWARD_GOST=true 但未检测到 gost 服务，跳过代理转发"
     fi
-else
-    echo "FORWARD_GOST=false，启用到目标公网 IP 的转发（全端口）"
-    if [ -n "$FORWARD_IPV4" ]; then
-        echo "Detected FORWARD_IPV4=$FORWARD_IPV4, applying IPv4 DNAT for TCP/UDP..."
-		iptables -t nat -I PREROUTING 1 -i tun0 -p tcp -d 127.0.0.0/8 -j RETURN
-		iptables -t nat -I PREROUTING 1 -i tun0 -p udp -d 127.0.0.0/8 -j RETURN
-        # 所有 TCP/UDP 端口转发到目标 IPv4（保留原始端口）
-        iptables -t nat -A PREROUTING -i tun0 -p tcp -j DNAT --to-destination "$FORWARD_IPV4"
-        iptables -t nat -A PREROUTING -i tun0 -p udp -j DNAT --to-destination "$FORWARD_IPV4"
-    else
-        echo "No FORWARD_IPV4 set. Skipping IPv4 DNAT rules."
-    fi
-    if [ -n "$FORWARD_IPV6" ]; then
-        echo "Detected FORWARD_IPV6=$FORWARD_IPV6, applying IPv6 DNAT for TCP/UDP..."
-		ip6tables -t nat -I PREROUTING 1 -i tun0 -p tcp -d ::1/128 -j RETURN
-		ip6tables -t nat -I PREROUTING 1 -i tun0 -p udp -d ::1/128 -j RETURN
-        ip6tables -t nat -A PREROUTING -i tun0 -p tcp -j DNAT --to-destination "$FORWARD_IPV6"
-        ip6tables -t nat -A PREROUTING -i tun0 -p udp -j DNAT --to-destination "$FORWARD_IPV6"
-    else
-        echo "No FORWARD_IPV6 set. Skipping IPv6 DNAT rules."
-    fi
+fi
+
+DEST_IPV4="$FORWARD_IPV4"
+DEST_IPV6="$FORWARD_IPV6"
+if [ -n "$DEST_IPV4" ]; then
+	# 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
+	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+		-j DNAT --to-destination "$DEST_IPV4"
+	iptables -t nat -A PREROUTING -i tun0 -p udp -m multiport --dports 80,443 \
+		-j DNAT --to-destination "$DEST_IPV4"
+	echo "IPv4 TCP/UDP Forwarded to $DEST_IPV4"
+fi
+if [ -n "$DEST_IPV6" ]; then
+	# 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
+	ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+		-j DNAT --to-destination "[$DEST_IPV6]"
+	ip6tables -t nat -A PREROUTING -i tun0 -p udp -m multiport --dports 80,443 \
+		-j DNAT --to-destination "[$DEST_IPV6]"
+	echo "IPv6 TCP/UDP Forwarded to [$DEST_IPV6]"
 fi
 
 # Enable TUN device
