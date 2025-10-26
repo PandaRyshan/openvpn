@@ -220,6 +220,8 @@ else
     echo "FORWARD_GOST=false，启用到目标公网 IP 的转发（全端口）"
     if [ -n "$FORWARD_IPV4" ]; then
         echo "Detected FORWARD_IPV4=$FORWARD_IPV4, applying IPv4 DNAT for TCP/UDP..."
+		iptables -t nat -I PREROUTING 1 -i tun0 -p tcp -d 127.0.0.0/8 -j RETURN
+		iptables -t nat -I PREROUTING 1 -i tun0 -p udp -d 127.0.0.0/8 -j RETURN
         # 所有 TCP/UDP 端口转发到目标 IPv4（保留原始端口）
         iptables -t nat -A PREROUTING -i tun0 -p tcp -j DNAT --to-destination "$FORWARD_IPV4"
         iptables -t nat -A PREROUTING -i tun0 -p udp -j DNAT --to-destination "$FORWARD_IPV4"
@@ -228,6 +230,8 @@ else
     fi
     if [ -n "$FORWARD_IPV6" ]; then
         echo "Detected FORWARD_IPV6=$FORWARD_IPV6, applying IPv6 DNAT for TCP/UDP..."
+		ip6tables -t nat -I PREROUTING 1 -i tun0 -p tcp -d ::1/128 -j RETURN
+		ip6tables -t nat -I PREROUTING 1 -i tun0 -p udp -d ::1/128 -j RETURN
         ip6tables -t nat -A PREROUTING -i tun0 -p tcp -j DNAT --to-destination "$FORWARD_IPV6"
         ip6tables -t nat -A PREROUTING -i tun0 -p udp -j DNAT --to-destination "$FORWARD_IPV6"
     else
