@@ -179,7 +179,7 @@ fi
 # Enable NAT forwarding
 echo "Forwarding IP..."
 iptables -t nat -A POSTROUTING -s 192.168.199.0/24 -o eth0 -j MASQUERADE
-ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -j MASQUERADE
+ip6tables -t nat -A POSTROUTING -s 2001:db8:2::/64 -o eth0 -j MASQUERADE
 iptables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
 
@@ -192,6 +192,9 @@ if [ "$ENABLE_GOST" = "true" ]; then
         PROXY_IPV6=$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')
 
         if [ -n "$PROXY_IPV4" ]; then
+			# 避免回环流量
+            iptables -t nat -I PREROUTING 1 -i tun0 -p tcp -d 127.0.0.0/8 -j RETURN
+            iptables -t nat -I PREROUTING 1 -i tun0 -p udp -d 127.0.0.0/8 -j RETURN
             # 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
             iptables -t nat -A PREROUTING -i tun0 -p tcp \
                 -j DNAT --to-destination "$PROXY_IPV4:40000"
@@ -200,6 +203,10 @@ if [ "$ENABLE_GOST" = "true" ]; then
             echo "IPv4 TCP/UDP Forwarded to gost: $PROXY_IPV4:40000"
         fi
         if [ -n "$PROXY_IPV6" ]; then
+			# 避免回环流量
+            ip6tables -t nat -I PREROUTING 1 -i tun0 -p tcp -d ::1/128 -j RETURN
+            ip6tables -t nat -I PREROUTING 1 -i tun0 -p udp -d ::1/128 -j RETURN
+            # 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
             ip6tables -t nat -A PREROUTING -i tun0 -p tcp \
                 -j DNAT --to-destination "[$PROXY_IPV6]:40000"
             ip6tables -t nat -A PREROUTING -i tun0 -p udp \
