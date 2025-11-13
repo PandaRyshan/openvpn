@@ -186,13 +186,13 @@ ip6tables -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmt
 ## 转发策略：FORWARD_GOST 默认为 false，且与 FORWARD_IPV4/6 互斥
 ENABLE_GOST="${FORWARD_GOST:-false}"
 if [ "$ENABLE_GOST" = "true" ]; then
-    echo "FORWARD_GOST=true, 将忽略 FORWARD_IPV4/6，尝试转发到 gost 服务"
-    if timeout 1 getent hosts gost > /dev/null 2>&1; then
-        FORWARD_IPV4="$(getent ahostsv4 gost | head -n 1 | awk '{print $1}')"
-        FORWARD_IPV6="$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')"
-    else
-        echo "FORWARD_GOST=true 但未检测到 gost 服务，跳过代理转发"
-    fi
+	echo "FORWARD_GOST=true, 将忽略 FORWARD_IPV4/6，尝试转发到 gost 服务"
+	if timeout 1 getent hosts gost > /dev/null 2>&1; then
+		FORWARD_IPV4="$(getent ahostsv4 gost | head -n 1 | awk '{print $1}')"
+		FORWARD_IPV6="$(getent ahostsv6 gost | head -n 1 | awk '{print $1}')"
+	else
+		echo "FORWARD_GOST=true 但未检测到 gost 服务，跳过代理转发"
+	fi
 fi
 
 DEST_IPV4="$FORWARD_IPV4"
