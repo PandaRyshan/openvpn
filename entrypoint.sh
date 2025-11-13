@@ -201,38 +201,20 @@ DEST_PORT="40000"
 if [ -n "$DEST_IPV4" ]; then
 	# 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
 
-	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
+	iptables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443,8080,8443,8880,9443 \
 		-j DNAT --to-destination "$DEST_IPV4:$DEST_PORT"
-	iptables -t nat -A PREROUTING -i tun0 -p udp -m multiport --dports 80,443 \
+	iptables -t nat -A PREROUTING -i tun0 -p udp -m multiport --dports 80,443,8080,8443,8880,9443 \
 		-j DNAT --to-destination "$DEST_IPV4:$DEST_PORT"
-
-	iptables -t nat -N TUN2GOST 2>/dev/null || true
-	iptables -t nat -A PREROUTING -i tun0 -j TUN2GOST
-	iptables -t nat -A TUN2GOST -m addrtype --dst-type LOCAL -j RETURN
-	iptables -t nat -A TUN2GOST -d "$DEST_IPV4" -j RETURN
-	iptables -t nat -A TUN2GOST -p tcp --dport 22 -j RETURN
-	iptables -t nat -A TUN2GOST -p tcp --dport 222 -j RETURN
-	iptables -t nat -A TUN2GOST -p tcp -j DNAT --to-destination "$DEST_IPV4:$DEST_PORT"
-	iptables -t nat -A TUN2GOST -p udp -j DNAT --to-destination "$DEST_IPV4:$DEST_PORT"
 
 	echo "IPv4 TCP/UDP Forwarded to $DEST_IPV4:$DEST_PORT"
 fi
 if [ -n "$DEST_IPV6" ]; then
 	# 将所有 TCP/UDP 出口流量转发到 gost 的 40000 端口
 
-	#ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443 \
-	#	-j DNAT --to-destination "[$DEST_IPV6]:$DEST_PORT"
-	#ip6tables -t nat -A PREROUTING -i tun0 -p udp -m multiport --dports 80,443 \
-	#	-j DNAT --to-destination "[$DEST_IPV6]:$DEST_PORT"
-
-	ip6tables -t nat -N TUN2GOST 2>/dev/null || true
-	ip6tables -t nat -A PREROUTING -i tun0 -j TUN2GOST
-	ip6tables -t nat -A TUN2GOST -m addrtype --dst-type LOCAL -j RETURN
-	ip6tables -t nat -A TUN2GOST -d "$DEST_IPV6" -j RETURN
-	ip6tables -t nat -A TUN2GOST -p tcp --dport 22 -j RETURN
-	ip6tables -t nat -A TUN2GOST -p tcp --dport 222 -j RETURN
-	ip6tables -t nat -A TUN2GOST -p tcp -j DNAT --to-destination "[$DEST_IPV6]:$DEST_PORT"
-	ip6tables -t nat -A TUN2GOST -p udp -j DNAT --to-destination "[$DEST_IPV6]:$DEST_PORT"
+	ip6tables -t nat -A PREROUTING -i tun0 -p tcp -m multiport --dports 80,443,8080,8443,8880,9443 \
+		-j DNAT --to-destination "[$DEST_IPV6]:$DEST_PORT"
+	ip6tables -t nat -A PREROUTING -i tun0 -p udp -m multiport --dports 80,443,8080,8443,8880,9443 \
+		-j DNAT --to-destination "[$DEST_IPV6]:$DEST_PORT"
 
 	echo "IPv6 TCP/UDP Forwarded to [$DEST_IPV6]:$DEST_PORT"
 fi
